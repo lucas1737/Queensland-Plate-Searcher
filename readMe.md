@@ -70,10 +70,16 @@ I'm planning to add these features in future updates:
 - Verbose/Silent Mode: Control the level of output detail
 - Cleaner Results Display: Better formatted terminal output
 
-## Disclaimer
+## DISCLAIMER
 
-This tool is for personal use only. Please ensure you comply with all relevant terms of service and privacy regulations when using this tool. This is not an official Queensland Transport product.
+This tool is for PERSONAL, NON-COMMERCIAL USE ONLY.
+
+Users must comply with Queensland Transport's Terms of Use. Charging fees for access to this tool or information obtained through it would violate these terms.
+
+This tool is provided as-is with no warranties. This is not an official Queensland Transport product.
+
+By using this tool, you agree to use it responsibly and in compliance with all applicable laws and terms of service.
 
 ## License
 
-This project is private and not licensed for public distribution.
+This project is licensed for personal, non-commercial use only.
