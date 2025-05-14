@@ -64,7 +64,6 @@ Engine number: 1AB2345678
 
 I'm planning to add these features in future updates:
 
-- Batch Processing: Check multiple plate numbers from a text file
 - Export Option: Save results to CSV or text files
 - Retry Mechanism: Automatically retry failed requests
 - Verbose/Silent Mode: Control the level of output detail

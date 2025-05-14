@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 
 def check_registration(plate_number):
     """
@@ -86,7 +87,9 @@ def check_registration(plate_number):
                     terms_button.click()
                     
                     # Wait for the page to update after accepting terms
-                    time.sleep(2)
+                    WebDriverWait(driver, 10).until(
+                        EC.element_to_be_clickable((By.ID, "vehicleSearchForm:plateNumber"))
+                    )
                 else:
                     print("No Terms of Use button found. The page might have already loaded or the structure has changed.")
             except Exception as e:
@@ -231,10 +234,10 @@ def check_registration(plate_number):
             if error_messages:
                 error_text = error_messages[0].text
                 print(f"Error: {error_text}")
-                return
+                return {"Plate Number": plate_number, "Error": error_text}
             
             # Extract registration details based on the HTML structure you provided
-            registration_details = {}
+            registration_details = {"Plate Number": plate_number}
             
             # Get all dl.data elements
             data_lists = driver.find_elements(By.CSS_SELECTOR, "dl.data")
@@ -271,6 +274,8 @@ def check_registration(plate_number):
             for key, value in registration_details.items():
                 print(f"{key}: {value}")
             
+            return registration_details
+            
         finally:
             # Close the browser
             driver.quit()
@@ -278,16 +283,88 @@ def check_registration(plate_number):
     except Exception as e:
         print(f"An error occurred: {e}")
         traceback.print_exc()
+        return {"Plate Number": plate_number, "Error": str(e)}
+
+def check_multiple_registrations(plate_numbers, max_workers=4):
+    """
+    Check multiple vehicle registrations concurrently
+    
+    Args:
+        plate_numbers: List of plate numbers to check
+        max_workers: Maximum number of concurrent workers (default: 4)
+        
+    Returns:
+        List of registration details dictionaries
+    """
+    print(f"Checking {len(plate_numbers)} plate numbers with {max_workers} concurrent workers...")
+    
+    results = []
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all tasks and collect futures
+        futures = {executor.submit(check_registration, plate): plate for plate in plate_numbers}
+        
+        # Process results as they complete
+        for future in futures:
+            try:
+                result = future.result()
+                if result:
+                    results.append(result)
+            except Exception as e:
+                plate = futures[future]
+                print(f"Error processing plate {plate}: {e}")
+                results.append({"Plate Number": plate, "Error": str(e)})
+    
+    print(f"Completed checking {len(plate_numbers)} plate numbers")
+    return results
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Check Queensland vehicle registration details")
-    parser.add_argument("plate_number", nargs="?", help="The Queensland plate number to check")
+    parser.add_argument("plate_number", nargs="*", help="The Queensland plate number(s) to check")
+    parser.add_argument("--file", "-f", help="File containing plate numbers (one per line)")
+    parser.add_argument("--workers", "-w", type=int, default=4, help="Number of concurrent workers (default: 4)")
     args = parser.parse_args()
     
-    # If plate number is provided as command-line argument, use it
-    # Otherwise, prompt the user to enter a plate number
+    plate_numbers = []
+    
+    # Collect plate numbers from command line arguments
     if args.plate_number:
-        check_registration(args.plate_number)
+        plate_numbers.extend(args.plate_number)
+    
+    # Collect plate numbers from file if specified
+    if args.file:
+        try:
+            with open(args.file, 'r') as f:
+                file_plates = [line.strip() for line in f if line.strip()]
+                plate_numbers.extend(file_plates)
+                print(f"Loaded {len(file_plates)} plate numbers from {args.file}")
+        except Exception as e:
+            print(f"Error reading plate numbers from file: {e}")
+    
+    # If no plate numbers provided, prompt the user
+    if not plate_numbers:
+        user_input = input("Enter Queensland plate number(s) separated by commas: ")
+        plate_numbers = [p.strip() for p in user_input.split(',') if p.strip()]
+    
+    # Check if we have any plate numbers to process
+    if plate_numbers:
+        if len(plate_numbers) == 1:
+            # If only one plate number, use the original function
+            check_registration(plate_numbers[0])
+        else:
+            # If multiple plate numbers, use the concurrent function
+            results = check_multiple_registrations(plate_numbers, max_workers=args.workers)
+            
+            # Display a summary of results
+            print("\nSummary of Registration Checks:")
+            print("-" * 50)
+            for result in results:
+                plate = result.get("Plate Number", "Unknown")
+                if "Error" in result:
+                    print(f"{plate}: Error - {result['Error']}")
+                else:
+                    # Extract key information if available
+                    status = result.get("Registration status", "Unknown")
+                    expiry = result.get("Expiry date", "Unknown")
+                    print(f"{plate}: Status - {status}, Expiry - {expiry}")
     else:
-        plate_number = input("Enter the Queensland plate number to check: ")
-        check_registration(plate_number)
+        print("No plate numbers provided. Exiting.")
