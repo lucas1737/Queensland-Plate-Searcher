@@ -45,10 +45,6 @@ def check_registration(plate_number):
                 EC.presence_of_element_located((By.TAG_NAME, "body"))
             )
             
-            # Save screenshot for debugging
-            driver.save_screenshot("initial_page.png")
-            print("Initial page screenshot saved as initial_page.png")
-            
             # Check if we need to accept Terms of Use
             try:
                 # Look for the Terms of Use button using various methods
@@ -91,8 +87,6 @@ def check_registration(plate_number):
                     
                     # Wait for the page to update after accepting terms
                     time.sleep(2)
-                    driver.save_screenshot("after_terms.png")
-                    print("Screenshot after accepting terms saved as after_terms.png")
                 else:
                     print("No Terms of Use button found. The page might have already loaded or the structure has changed.")
             except Exception as e:
@@ -147,16 +141,8 @@ def check_registration(plate_number):
                         except:
                             print("Error finding input fields")
                         
-                        # If we still can't find it, take a screenshot and raise an exception
+                        # If we still can't find it, raise an exception
                         if 'plate_input' not in locals():
-                            driver.save_screenshot("page_structure.png")
-                            print("Page structure screenshot saved as page_structure.png")
-                            
-                            # Dump the page source for debugging
-                            with open("page_source.html", "w", encoding="utf-8") as f:
-                                f.write(driver.page_source)
-                            print("Page source saved as page_source.html")
-                            
                             raise Exception("Could not locate the plate number input field")
             
             # Enter the plate number
@@ -222,10 +208,8 @@ def check_registration(plate_number):
                                 except:
                                     print("Error finding buttons")
                                 
-                                # If we still can't find it, take a screenshot and raise an exception
+                                # If we still can't find it, raise an exception
                                 if 'search_button' not in locals():
-                                    driver.save_screenshot("page_structure.png")
-                                    print("Page structure screenshot saved as page_structure.png")
                                     raise Exception("Could not locate the search button")
             
             # Click the search button
@@ -240,21 +224,13 @@ def check_registration(plate_number):
                 )
                 print("Results loaded successfully")
             except:
-                print("Timeout waiting for results. Taking screenshot...")
-                driver.save_screenshot("timeout.png")
-                print("Timeout screenshot saved as timeout.png")
-            
-            # Take a screenshot of the results page
-            driver.save_screenshot("results_page.png")
-            print("Results page screenshot saved as results_page.png")
+                print("Timeout waiting for results.")
             
             # Check if there's an error message
             error_messages = driver.find_elements(By.CLASS_NAME, "ui-messages-error-detail")
             if error_messages:
                 error_text = error_messages[0].text
                 print(f"Error: {error_text}")
-                with open(f"registration_details_{plate_number}.txt", "w") as f:
-                    f.write(f"Error for plate number {plate_number}: {error_text}\n")
                 return
             
             # Extract registration details based on the HTML structure you provided
@@ -294,15 +270,6 @@ def check_registration(plate_number):
             print("-" * 50)
             for key, value in registration_details.items():
                 print(f"{key}: {value}")
-            
-            # Save results to a file
-            with open(f"registration_details_{plate_number}.txt", "w") as f:
-                f.write(f"Registration details for plate number {plate_number}:\n")
-                f.write("-" * 50 + "\n")
-                for key, value in registration_details.items():
-                    f.write(f"{key}: {value}\n")
-            
-            print(f"\nResults saved to registration_details_{plate_number}.txt")
             
         finally:
             # Close the browser
