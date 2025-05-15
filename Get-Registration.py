@@ -87,9 +87,7 @@ def check_registration(plate_number):
                     terms_button.click()
                     
                     # Wait for the page to update after accepting terms
-                    WebDriverWait(driver, 10).until(
-                        EC.element_to_be_clickable((By.ID, "vehicleSearchForm:plateNumber"))
-                    )
+                    time.sleep(2)
                 else:
                     print("No Terms of Use button found. The page might have already loaded or the structure has changed.")
             except Exception as e:
@@ -219,24 +217,23 @@ def check_registration(plate_number):
             print("Clicking search button...")
             search_button.click()
             
-            # Wait for results to load
-            try:
-                # Wait for the results page to load - look for the dl.data elements
-                WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, "dl.data"))
-                )
-                print("Results loaded successfully")
-            except:
-                print("Timeout waiting for results.")
+            # Wait for results to load - more flexible approach
+            time.sleep(3)  # Give the page time to load
             
             # Check if there's an error message
             error_messages = driver.find_elements(By.CLASS_NAME, "ui-messages-error-detail")
             if error_messages:
                 error_text = error_messages[0].text
                 print(f"Error: {error_text}")
-                return {"Plate Number": plate_number, "Error": error_text}
+                return {"Plate Number": plate_number, "Status": "ERROR", "Message": error_text}
             
-            # Extract registration details based on the HTML structure you provided
+            # Check for "Registration not found" message
+            not_found_elements = driver.find_elements(By.XPATH, "//*[contains(text(), 'Registration not found')]")
+            if not_found_elements:
+                print(f"Registration not found for plate number: {plate_number}")
+                return {"Plate Number": plate_number, "Status": "NOT FOUND", "Message": "Registration not found"}
+            
+            # Extract registration details based on the HTML structure
             registration_details = {"Plate Number": plate_number}
             
             # Get all dl.data elements
@@ -257,16 +254,66 @@ def check_registration(plate_number):
                         definition = definitions[i].text.strip()
                         if term and term not in registration_details:  # Avoid duplicates
                             registration_details[term] = definition
+                
+                # Make sure we have Status field for the summary
+                if "Status" in registration_details:
+                    # Status field already exists
+                    pass
+                else:
+                    # Try to determine status from other fields
+                    registration_details["Status"] = "REGISTERED" if "Expiry" in registration_details else "UNKNOWN"
             else:
                 print("Could not find any data lists on the page")
                 
-                # Fallback: try to extract any text content from the page
-                try:
+                # Try to extract data from page source directly
+                page_source = driver.page_source
+                
+                # Check if there's any form with registration data
+                if "dl class=\"data\"" in page_source:
+                    print("Found data lists in page source but couldn't extract with Selenium")
+                    
+                    # Try a different approach to extract data
+                    import re
+                    
+                    # Extract registration number
+                    reg_match = re.search(r'<dt>Registration number\s*</dt>\s*<dd>([^<]+)</dd>', page_source)
+                    if reg_match:
+                        registration_details["Registration number"] = reg_match.group(1).strip()
+                    
+                    # Extract VIN
+                    vin_match = re.search(r'<dt>Vehicle Identification Number \(VIN\)\s*</dt>\s*<dd>([^<]+)</dd>', page_source)
+                    if vin_match:
+                        registration_details["Vehicle Identification Number (VIN)"] = vin_match.group(1).strip()
+                    
+                    # Extract Description
+                    desc_match = re.search(r'<dt>Description\s*</dt>\s*<dd>([^<]+)</dd>', page_source)
+                    if desc_match:
+                        registration_details["Description"] = desc_match.group(1).strip()
+                    
+                    # Extract Purpose of use
+                    purpose_match = re.search(r'<dt>Purpose of use\s*</dt>\s*<dd>([^<]+)</dd>', page_source)
+                    if purpose_match:
+                        registration_details["Purpose of use"] = purpose_match.group(1).strip()
+                    
+                    # Extract Status
+                    status_match = re.search(r'<dt>Status\s*</dt>\s*<dd>([^<]+)</dd>', page_source)
+                    if status_match:
+                        registration_details["Status"] = status_match.group(1).strip()
+                    
+                    # Extract Expiry
+                    expiry_match = re.search(r'<dt>Expiry\s*</dt>\s*<dd>([^<]+)</dd>', page_source)
+                    if expiry_match:
+                        registration_details["Expiry"] = expiry_match.group(1).strip()
+                else:
+                    # Fallback: try to extract any text content from the page
                     body_text = driver.find_element(By.TAG_NAME, "body").text
-                    registration_details["Raw Content"] = body_text
-                except:
-                    print("Could not extract text from the page")
-                    registration_details["Error"] = "Could not extract registration details"
+                    if "Registration not found" in body_text:
+                        registration_details["Status"] = "NOT FOUND"
+                        registration_details["Message"] = "Registration not found"
+                    else:
+                        registration_details["Raw Content"] = body_text
+                        registration_details["Status"] = "UNKNOWN"
+                        registration_details["Message"] = "Could not extract registration details"
             
             # Print the results
             print(f"\nRegistration details for plate number {plate_number}:")
@@ -283,7 +330,7 @@ def check_registration(plate_number):
     except Exception as e:
         print(f"An error occurred: {e}")
         traceback.print_exc()
-        return {"Plate Number": plate_number, "Error": str(e)}
+        return {"Plate Number": plate_number, "Status": "ERROR", "Message": str(e)}
 
 def check_multiple_registrations(plate_numbers, max_workers=4):
     """
@@ -312,7 +359,7 @@ def check_multiple_registrations(plate_numbers, max_workers=4):
             except Exception as e:
                 plate = futures[future]
                 print(f"Error processing plate {plate}: {e}")
-                results.append({"Plate Number": plate, "Error": str(e)})
+                results.append({"Plate Number": plate, "Status": "ERROR", "Message": str(e)})
     
     print(f"Completed checking {len(plate_numbers)} plate numbers")
     return results
@@ -361,10 +408,15 @@ if __name__ == "__main__":
                 plate = result.get("Plate Number", "Unknown")
                 if "Error" in result:
                     print(f"{plate}: Error - {result['Error']}")
+                elif result.get("Status") == "NOT FOUND":
+                    print(f"{plate}: {result['Status']} - {result.get('Message', '')}")
+                elif result.get("Status") == "REGISTERED":
+                    expiry = result.get("Expiry", "Unknown")
+                    description = result.get("Description", "")
+                    print(f"{plate}: {result['Status']}, Expiry: {expiry}, Vehicle: {description}")
                 else:
-                    # Extract key information if available
-                    status = result.get("Registration status", "Unknown")
-                    expiry = result.get("Expiry date", "Unknown")
-                    print(f"{plate}: Status - {status}, Expiry - {expiry}")
+                    status = result.get("Status", "Unknown")
+                    print(f"{plate}: {status}")
     else:
         print("No plate numbers provided. Exiting.")
+
